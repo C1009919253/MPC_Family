@@ -34,7 +34,7 @@
 static size_t N = 6;
 static double dt = 0.1;
 
-static int node_number=3;
+static int node_number=1;
 
 using namespace std::chrono_literals;
 using CppAD::AD;
@@ -770,13 +770,16 @@ public:
         fg[0] = 0;
         for (int i = 0; i < N-1; i++)
         {
-            fg[0] += 0.1*(CppAD::pow(state[i]-x_, 2) + CppAD::pow(state[N+i]-y_, 2));
+            AD<double> d1 = CppAD::sqrt(CppAD::pow(state[i]-x_, 2) + CppAD::pow(state[N+i]-y_, 2));
+            fg[0] += 2.0*(CppAD::sqrt((2+d1*d1+d1*CppAD::sqrt(d1*d1+4))/2));
         }
         for (int i = 0; i < N; i++)
         {
-            fg[0] += 1.0*(CppAD::pow(state[3*N+i],2) + CppAD::pow(state[4*N+i], 2) + CppAD::pow(state[5*N+i], 2));
+            fg[0] += 0.5*(CppAD::pow(state[3*N+i],2) + CppAD::pow(state[4*N+i], 2) + CppAD::pow(state[5*N+i], 2));
         }
-        fg[0] += 0.1*(CppAD::pow(state[N-1]-x_, 2) + CppAD::pow(state[2*N-1]-y_, 2)); // The finnal point...
+        AD<double> d = CppAD::sqrt(CppAD::pow(state[N-1]-x_, 2) + CppAD::pow(state[2*N-1]-y_, 2));
+        fg[0] += 2.0*(CppAD::sqrt((2+d*d+d*CppAD::sqrt(d*d+4))/2));
+        //fg[0] += 0.1*(CppAD::pow(state[N-1]-x_, 2) + CppAD::pow(state[2*N-1]-y_, 2)); // The finnal point...
 
         fg[1] = state[0];
         fg[N+1] = state[N];
@@ -795,17 +798,14 @@ public:
             AD<double> vy0 = state[4*N+i];
             AD<double> w0 = state[5*N+i];
 
+            AD<double> d1 = CppAD::sqrt(CppAD::pow(x1-10, 2) + CppAD::pow(y1-10, 2));
+            AD<double> d0 = CppAD::sqrt(CppAD::pow(x0-10, 2) + CppAD::pow(y0-10, 2));
+
             fg[2 + i]    = x1 - (x0 + (cos(theta0) * vx0 - sin(theta0) * vy0) * dt); // note that use a trans point to overcome nonholonomic model
             fg[2 + N + i]    = y1 - (y0 + (sin(theta0) * vx0 + cos(theta0) * vy0) * dt);
-            //fg[2 + 2*N + i] = theta1 - (theta0 + w0 * dt);
-            tf2::Matrix3x3 R0(cos(theta0.value_+w0.value_*dt), -sin(theta0.value_+w0.value_*dt), 0.0, sin(theta0.value_+w0.value_*dt), cos(theta0.value_+w0.value_*dt), 0.0, 0.0, 0.0, 1.0);
-            tf2::Matrix3x3 w(0, -w0.value_*dt, 0, w0.value_*dt, 0, 0, 0, 0, 0);
-            tf2::Matrix3x3 R1;
-            R1 = R0*w;
-            double r, p, y;
-            R0.getRPY(r, p, y);
+            fg[2 + 2*N + i] = theta1 - (theta0 + w0 * dt);
 
-            fg[2 + 2*N + i] = theta1 - (y);
+            fg[2 + 3*N + i] = (CppAD::sqrt((2+d1*d1+d1*CppAD::sqrt(d1*d1+4))/2)-5.2) - (1-lambda)*(CppAD::sqrt((2+d0*d0+d0*CppAD::sqrt(d0*d0+4))/2)-5.2); // barrier cbf
 
             fg[2+(3+node_number)*N+i] = (CppAD::pow(vx0, 2) + CppAD::pow(vy0, 2));
 
@@ -910,8 +910,8 @@ private:
             state_down[3*N+i] = -1.0;
             state_up[3*N+i] = 1.0;
 
-            state_down[4*N+i] = -0.0;
-            state_up[4*N+i] = 0.0;
+            state_down[4*N+i] = -1.0;
+            state_up[4*N+i] = 1.0;
 
             state_down[5*N+i] = -0.3;
             state_up[5*N+i] = 0.3;

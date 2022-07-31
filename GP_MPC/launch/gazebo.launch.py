@@ -26,7 +26,7 @@ import math
 def generate_launch_description():
     use_sim_time = True
     
-    num = 4
+    num = 1
 
     world_path = PathJoinSubstitution(
         [FindPackageShare("GP_MPC"), "worlds", "barrier.world"]
@@ -67,7 +67,7 @@ def generate_launch_description():
             executable='spawn_entity.py',
             name='urdf_spawner',
             output='screen',
-            arguments=["-topic", "robot_description", "-entity", "linorobot"+str(i+1), "-robot_namespace", "Vehicle"+str(i+1), "-x", str(-10), "-y", str(-10-2*i)]# "-x", str(-10+10*math.cos(2*i*math.pi/num)), "-y", str(-10+10*math.sin(2*i*math.pi/num))]
+            arguments=["-topic", "robot_description", "-entity", "linorobot"+str(i+1), "-robot_namespace", "Vehicle"+str(i+1), "-x", str(0), "-y", str(0)]# "-x", str(-10+10*math.cos(2*i*math.pi/num)), "-y", str(-10+10*math.sin(2*i*math.pi/num))]
         ),])
 
     return LaunchDescription(entities)

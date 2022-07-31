@@ -24,7 +24,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     
-    num = 2
+    num = 1
     
     entities = []
     
@@ -33,7 +33,7 @@ def generate_launch_description():
         Node(
             package='GP_MPC',
             executable='GP_MPC',
-            name='Vehicle'+str(i+2),
+            name='Vehicle'+str(i+1),
         ),])
 
     return LaunchDescription(entities)

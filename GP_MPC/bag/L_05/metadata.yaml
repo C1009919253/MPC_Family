@@ -2,18 +2,18 @@ rosbag2_bagfile_information:
   version: 4
   storage_identifier: sqlite3
   relative_file_paths:
-    - L_02_0.db3
+    - L_05_0.db3
   duration:
-    nanoseconds: 137552275787
+    nanoseconds: 138014981402
   starting_time:
-    nanoseconds_since_epoch: 1659233925193449374
-  message_count: 2749
+    nanoseconds_since_epoch: 1659234087082391826
+  message_count: 2758
   topics_with_message_count:
     - topic_metadata:
         name: /Vehicle1/odom/unfiltered
         type: nav_msgs/msg/Odometry
         serialization_format: cdr
         offered_qos_profiles: "- history: 3\n  depth: 0\n  reliability: 1\n  durability: 2\n  deadline:\n    sec: 2147483647\n    nsec: 4294967295\n  lifespan:\n    sec: 2147483647\n    nsec: 4294967295\n  liveliness: 1\n  liveliness_lease_duration:\n    sec: 2147483647\n    nsec: 4294967295\n  avoid_ros_namespace_conventions: false"
-      message_count: 2749
+      message_count: 2758
   compression_format: ""
   compression_mode: ""
