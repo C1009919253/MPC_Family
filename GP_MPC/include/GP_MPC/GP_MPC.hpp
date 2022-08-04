@@ -803,7 +803,20 @@ public:
 
             fg[2 + i]    = x1 - (x0 + (cos(theta0) * vx0 - sin(theta0) * vy0) * dt); // note that use a trans point to overcome nonholonomic model
             fg[2 + N + i]    = y1 - (y0 + (sin(theta0) * vx0 + cos(theta0) * vy0) * dt);
-            fg[2 + 2*N + i] = theta1 - (theta0 + w0 * dt);
+
+
+            manif::SO2d r0(theta0.value_);
+            manif::SO2Tangentd wn(w0.value_*dt);
+            manif::SO2d r1;
+
+            r1 = r0+wn;
+
+            manif::SO2Tangentd w31 = r1.log();
+
+            auto theta01 = w31.angle();
+
+            fg[2 + 2*N + i] = theta1 - (theta01);
+
 
             fg[2 + 3*N + i] = (CppAD::sqrt((2+d1*d1+d1*CppAD::sqrt(d1*d1+4))/2)-5.2) - (1-lambda)*(CppAD::sqrt((2+d0*d0+d0*CppAD::sqrt(d0*d0+4))/2)-5.2); // barrier cbf
 
