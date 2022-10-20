@@ -29,7 +29,7 @@ def generate_launch_description():
     num = 2
 
     world_path = PathJoinSubstitution(
-        [FindPackageShare("Robust_MPC"), "worlds", "barrier.world"]
+        [FindPackageShare("MPC_SE"), "worlds", "empty.world"]
     )
 
     description_launch_path = PathJoinSubstitution(

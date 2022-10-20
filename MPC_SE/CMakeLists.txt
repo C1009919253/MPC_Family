@@ -84,7 +84,7 @@ ament_target_dependencies(MPC_SE
   "tf2_geometry_msgs"
   "nav_msgs"
   "Eigen3"
-  "ACADO"
+  #"ACADO"
   #"blasfeo"
   #"hpipm"
   #"ct_core"

@@ -58,7 +58,7 @@ public:
         f << dot(theta) == w;
 
         h << x-0.5;
-        h << y-0.0;
+        h << y-0.5;
         h << theta;
 
         Q.resize(3, 3);
@@ -66,34 +66,6 @@ public:
 
         r.resize(3);
         r.setAll(0.0);
-
-        ocp.minimizeLSQ(Q, h, r);
-        ocp.subjectTo(f);
-        ocp.subjectTo(AT_START, x == 0.0);
-        ocp.subjectTo(AT_START, y == 0.0);
-        ocp.subjectTo(AT_START, theta == 0.0);
-        ocp.subjectTo(-1.0<=vx<=1.0);
-        ocp.subjectTo(-0.0<=vy<=0.0);
-        ocp.subjectTo(-0.3<=w<=0.3);
-
-        GnuplotWindow window; // 在窗口中结果可视化
-            window.addSubplot(x, "x");
-            window.addSubplot(y, "y");
-            window.addSubplot(theta, "theta");
-            window.addSubplot(vx, "vx");
-            window.addSubplot(vy, "vy");
-            window.addSubplot(w, "w");
-
-        OptimizationAlgorithm algorithm(ocp);
-        algorithm << window;
-        algorithm.solve();
-
-        VariablesGrid controls;
-
-        algorithm.getControls(controls);
-
-        auto xxx = controls
-
     }
 private:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_list[20];
@@ -112,12 +84,13 @@ private:
     DMatrix Q;
     DVector r;
 
-    OCP ocp;
+    double x0, y0, theta0;
 
     void sub_odom_callback(nav_msgs::msg::Odometry odom1)
     {
-
-
+        x0 = odom1.pose.pose.position.x;
+        y0 = odom1.pose.pose.position.y;
+        theta0 = Orientation2Elur(odom1);
     }
     double Orientation2Elur(nav_msgs::msg::Odometry ori_odom)
     {
@@ -129,7 +102,32 @@ private:
     }
     void timer_callback()
     {
+        OCP ocp;
 
+        ocp.minimizeLSQ(Q, h, r);
+        ocp.subjectTo(f);
+        ocp.subjectTo(AT_START, x == x0);
+        ocp.subjectTo(AT_START, y == y0);
+        ocp.subjectTo(AT_START, theta == theta0);
+        ocp.subjectTo(-1.0<=vx<=1.0);
+        ocp.subjectTo(-0.0<=vy<=0.0);
+        ocp.subjectTo(-0.3<=w<=0.3);
+
+        OptimizationAlgorithm algorithm(ocp);
+        algorithm.solve();
+
+        VariablesGrid controls;
+
+        algorithm.getControls(controls);
+
+        DMatrix U = controls.getMatrix(0);
+
+        geometry_msgs::msg::Twist twist;
+        twist.linear.x = U(0);
+        twist.linear.y = U(1);
+        twist.angular.z = U(2);
+
+        cmd_vel->publish(twist);
     }
     /*std::vector<double> Solve()
     {
