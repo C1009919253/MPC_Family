@@ -220,9 +220,9 @@ private:
         ocp.subjectTo(-1.0<=dot(v)<=1.0);
 
         RealTimeAlgorithm alg(ocp);
-
+OCPexport mpc( ocp );
         Controller controller(alg);
-        DVector asd(3);
+        DVector asd(4);
         asd(0) = cos(td[times][0])*x0+sin(td[times][0])*y0-xd[times][0];
         asd(1) = -sin(td[times][0])*x0+cos(td[times][0])*y0-yd[times][0];
         asd(2) = theta0-td[times][0];
