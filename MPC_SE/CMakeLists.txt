@@ -15,18 +15,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(LINK_DIR /usr/local/lib
-/usr/lib
-/usr/lib/x86_64-linux-gnu/
-
-)
-INCLUDE( UseACADO.cmake )
-link_directories(${LINK_DIR}
-${ACADO_LIBRARY_DIRS}
-)
-SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR} )
-
-# find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -36,82 +24,56 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
-#find_package(blasfeo REQUIRED)
-#find_package(hpipm REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-FIND_PACKAGE(ACADO REQUIRED)
-#find_package(ct_core REQUIRED)
-#find_package(ct_rbd REQUIRED)
-#find_package(ct_optcon REQUIRED)
-#find_package(ct_models REQUIRED)
-#find_package(manif REQUIRED)
-#find_package(boost REQUIRED)
-#find_package(bayesopt REQUIRED)
 
-#include(./FindACADO.cmake)
+include_directories( include/)
 
-include_directories( include/
-    /usr/local/include
-    . ${ACADO_INCLUDE_DIRS}
-    )
-    
-INCLUDE_DIRECTORIES( . ${ACADO_INCLUDE_DIRS} )
-
-#include(./FindGUROBI.cmake)
-#include_directories(${GUROBI_INCLUDE_DIRS}
-#/home/wsf/Git_Src/bayesopt/include/
-#/home/wsf/Git_Src/bayesopt/src/
-#)
-
-add_executable(MPC_SE
-  src/main.cpp
+add_library(nmpc_lib
+        solver/qpoases/SRC/Bounds.cpp
+        solver/qpoases/SRC/Constraints.cpp
+        solver/qpoases/SRC/CyclingManager.cpp
+        solver/qpoases/SRC/Indexlist.cpp
+        solver/qpoases/SRC/MessageHandling.cpp
+        solver/qpoases/SRC/QProblem.cpp
+        solver/qpoases/SRC/QProblemB.cpp
+        solver/qpoases/SRC/SubjectTo.cpp
+        solver/qpoases/SRC/Utils.cpp
+        solver/qpoases/SRC/EXTRAS/SolutionAnalysis.cpp
+        solver/OCPexport/acado_qpoases_interface.cpp
+        solver/OCPexport/acado_integrator.c
+        solver/OCPexport/acado_solver.c
+        solver/OCPexport/acado_auxiliary_functions.c
 )
 
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${manif_INCLUDE_DIRS})
+target_include_directories(nmpc_lib PUBLIC
+        solver/
+        solver/OCPexport
+        solver/qpoases
+        solver/qpoases/INCLUDE
+        solver/qpoases/SRC
+        )
 
-target_link_libraries(MPC_SE
-${ACADO_SHARED_LIBRARIES}
-)
+add_executable(MPC_SE src/main.cpp)
 
-TARGET_LINK_LIBRARIES( MPC_SE ${ACADO_SHARED_LIBRARIES} )
+target_link_libraries(MPC_SE nmpc_lib)
 
 ament_target_dependencies(MPC_SE
-  "rclcpp"
-  "std_msgs"
-  "geometry_msgs"
-  "tf2_msgs"
-  "tf2"
-  "tf2_geometry_msgs"
-  "nav_msgs"
-  "Eigen3"
-  #"ACADO"
-  #"blasfeo"
-  #"hpipm"
-  #"ct_core"
-  #"ct_rbd"
-  #"ct_optcon"
-  #"ct_models"
-  #"manif"
+  rclcpp
+  std_msgs
+  geometry_msgs
+  tf2_msgs
+  tf2
+  tf2_geometry_msgs
+  nav_msgs
+  Eigen3
 )
 
 install(TARGETS MPC_SE
  DESTINATION lib/${PROJECT_NAME})
- 
- install(DIRECTORY
+
+install(DIRECTORY
 launch
 worlds
 DESTINATION share/${PROJECT_NAME}/
 )
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
-
-ament_package()
+# add_dependencies(nonlinear_mpc_node ${${PROJECT_NAME}_EXPORTED_TARGETS})

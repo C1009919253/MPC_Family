@@ -24,6 +24,7 @@ INCLUDE( UseACADO.cmake )
 link_directories(${LINK_DIR}
 ${ACADO_LIBRARY_DIRS}
 )
+SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR} )
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -38,7 +39,7 @@ find_package(Eigen3 REQUIRED)
 #find_package(blasfeo REQUIRED)
 #find_package(hpipm REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(ACADO REQUIRED)
+FIND_PACKAGE(ACADO REQUIRED)
 #find_package(ct_core REQUIRED)
 #find_package(ct_rbd REQUIRED)
 #find_package(ct_optcon REQUIRED)
@@ -47,31 +48,62 @@ find_package(ACADO REQUIRED)
 #find_package(boost REQUIRED)
 #find_package(bayesopt REQUIRED)
 
-#SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR} )
+#include(./FindACADO.cmake)
 
-include(./FindACADO.cmake)
-
-include_directories(include
+include_directories( include/
     /usr/local/include
     . ${ACADO_INCLUDE_DIRS}
     )
+    
+INCLUDE_DIRECTORIES( . ${ACADO_INCLUDE_DIRS} )
 
-#include(./FindGUROBI.cmake)
-#include_directories(${GUROBI_INCLUDE_DIRS}
-#/home/wsf/Git_Src/bayesopt/include/
-#/home/wsf/Git_Src/bayesopt/src/
-#)
+add_library(nmpc_lib
+        solver/qpoases/SRC/Bounds.cpp
+        solver/qpoases/SRC/Constraints.cpp
+        solver/qpoases/SRC/CyclingManager.cpp
+        solver/qpoases/SRC/Indexlist.cpp
+        solver/qpoases/SRC/MessageHandling.cpp
+        solver/qpoases/SRC/QProblem.cpp
+        solver/qpoases/SRC/QProblemB.cpp
+        solver/qpoases/SRC/SubjectTo.cpp
+        solver/qpoases/SRC/Utils.cpp
+        solver/qpoases/SRC/EXTRAS/SolutionAnalysis.cpp
+        solver/OCPexport/acado_qpoases_interface.cpp
+        solver/OCPexport/acado_integrator.c
+        solver/OCPexport/acado_solver.c
+        solver/OCPexport/acado_auxiliary_functions.c
+)
+
+target_include_directories(nmpc_lib PUBLIC
+        solver/
+        solver/OCPexport
+        solver/qpoases
+        solver/qpoases/INCLUDE
+        solver/qpoases/SRC
+        )
 
 add_executable(MPC_SE
   src/main.cpp
-  include/MPC_SE/DLQR.cpp
 )
+
+target_link_libraries(MPC_SE nmpc_lib)
+
+target_include_directories(MPC_SE PUBLIC
+        solver/
+        solver/OCPexport
+        solver/qpoases
+        solver/qpoases/INCLUDE
+        solver/qpoases/SRC
+        )
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${manif_INCLUDE_DIRS})
 
 target_link_libraries(MPC_SE
 ${ACADO_SHARED_LIBRARIES}
+
 )
+
+TARGET_LINK_LIBRARIES( MPC_SE ${ACADO_SHARED_LIBRARIES} )
 
 ament_target_dependencies(MPC_SE
   "rclcpp"
@@ -82,7 +114,7 @@ ament_target_dependencies(MPC_SE
   "tf2_geometry_msgs"
   "nav_msgs"
   "Eigen3"
-  "ACADO"
+  #"ACADO"
   #"blasfeo"
   #"hpipm"
   #"ct_core"
