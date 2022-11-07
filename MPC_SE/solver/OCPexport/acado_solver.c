@@ -213,8 +213,8 @@ acadoWorkspace.H[(iRow * 120 + 60) + (iCol * 2 + 1)] = acadoWorkspace.H[(iCol * 
 
 void acado_multQ1d( real_t* const dOld, real_t* const dNew )
 {
-dNew[0] = +dOld[0];
-dNew[1] = +dOld[1];
+dNew[0] = + (real_t)1.0000000000000000e+01*dOld[0];
+dNew[1] = + (real_t)1.0000000000000000e+01*dOld[1];
 dNew[2] = +dOld[2];
 }
 
@@ -226,8 +226,8 @@ RDy1[1] = +Dy1[4];
 
 void acado_multQDy( real_t* const Dy1, real_t* const QDy1 )
 {
-QDy1[0] = +Dy1[0];
-QDy1[1] = +Dy1[1];
+QDy1[0] = + (real_t)1.0000000000000000e+01*Dy1[0];
+QDy1[1] = + (real_t)1.0000000000000000e+01*Dy1[1];
 QDy1[2] = +Dy1[2];
 }
 
@@ -261,12 +261,12 @@ dNew[2] += + E1[4]*U1[0] + E1[5]*U1[1];
 
 void acado_multQ1Gx( real_t* const Gx1, real_t* const Gx2 )
 {
-Gx2[0] = +Gx1[0];
-Gx2[1] = +Gx1[1];
-Gx2[2] = +Gx1[2];
-Gx2[3] = +Gx1[3];
-Gx2[4] = +Gx1[4];
-Gx2[5] = +Gx1[5];
+Gx2[0] = + (real_t)1.0000000000000000e+01*Gx1[0];
+Gx2[1] = + (real_t)1.0000000000000000e+01*Gx1[1];
+Gx2[2] = + (real_t)1.0000000000000000e+01*Gx1[2];
+Gx2[3] = + (real_t)1.0000000000000000e+01*Gx1[3];
+Gx2[4] = + (real_t)1.0000000000000000e+01*Gx1[4];
+Gx2[5] = + (real_t)1.0000000000000000e+01*Gx1[5];
 Gx2[6] = +Gx1[6];
 Gx2[7] = +Gx1[7];
 Gx2[8] = +Gx1[8];
@@ -287,10 +287,10 @@ Gx2[8] = + (real_t)5.0000000000000000e+00*Gx1[8];
 
 void acado_multQ1Gu( real_t* const Gu1, real_t* const Gu2 )
 {
-Gu2[0] = +Gu1[0];
-Gu2[1] = +Gu1[1];
-Gu2[2] = +Gu1[2];
-Gu2[3] = +Gu1[3];
+Gu2[0] = + (real_t)1.0000000000000000e+01*Gu1[0];
+Gu2[1] = + (real_t)1.0000000000000000e+01*Gu1[1];
+Gu2[2] = + (real_t)1.0000000000000000e+01*Gu1[2];
+Gu2[3] = + (real_t)1.0000000000000000e+01*Gu1[3];
 Gu2[4] = +Gu1[4];
 Gu2[5] = +Gu1[5];
 }
@@ -1012,8 +1012,8 @@ acadoWorkspace.DyN[2] = acadoWorkspace.objValueOut[2] - acadoVariables.yN[2];
 objVal = 0.0000000000000000e+00;
 for (lRun1 = 0; lRun1 < 30; ++lRun1)
 {
-tmpDy[0] = + acadoWorkspace.Dy[lRun1 * 5];
-tmpDy[1] = + acadoWorkspace.Dy[lRun1 * 5 + 1];
+tmpDy[0] = + acadoWorkspace.Dy[lRun1 * 5]*(real_t)1.0000000000000000e+01;
+tmpDy[1] = + acadoWorkspace.Dy[lRun1 * 5 + 1]*(real_t)1.0000000000000000e+01;
 tmpDy[2] = + acadoWorkspace.Dy[lRun1 * 5 + 2];
 tmpDy[3] = + acadoWorkspace.Dy[lRun1 * 5 + 3];
 tmpDy[4] = + acadoWorkspace.Dy[lRun1 * 5 + 4];

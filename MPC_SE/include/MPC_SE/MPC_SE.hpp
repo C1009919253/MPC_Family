@@ -161,8 +161,6 @@ public:
 
         acado_initializeSolver();
 
-        acado_preparationStep();
-
     }
 private:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_list[20];
@@ -199,49 +197,56 @@ private:
     void timer_callback()
     {
         //
-            // Prepare a consistent initial guess
-            //
+        // Prepare a consistent initial guess
+        //
         int i;
 
-            for (i = 0; i < N + 1; ++i)
-            {
-                acadoVariables.x[i * NX + 0] = 1;
-                acadoVariables.x[i * NX + 1] = sqrt(1.0 - 0.1 * 0.1);
-                acadoVariables.x[i * NX + 2] = 0.9;
-                acadoVariables.x[i * NX + 3] = 0;
-                acadoVariables.x[i * NX + 4] = 0;
-                acadoVariables.x[i * NX + 5] = 0;
-            }
+        for (i = 0; i < N + 1; ++i)
+        {
+            acadoVariables.x[i * NX + 0] = x0;
+            acadoVariables.x[i * NX + 1] = y0;
+            acadoVariables.x[i * NX + 2] = theta0;
+        }
 
-            //
-            // Prepare references
-            //
+        //
+        // Prepare references
+        //
 
-            for (i = 0; i < N; ++i)
-            {
-                acadoVariables.y[i * NY + 0] = 0; // x
-                acadoVariables.y[i * NY + 1] = 1.0; // y
-                acadoVariables.y[i * NY + 2] = 0; // w
-                acadoVariables.y[i * NY + 3] = 0;
-                acadoVariables.y[i * NY + 4] = 0;
-                acadoVariables.y[i * NY + 5] = 0;
-                acadoVariables.y[i * NY + 6] = 0; // u
-            }
+        for (i = 0; i < N; ++i)
+        {
+            acadoVariables.y[i * NY + 0] = 0.0; // x
+            acadoVariables.y[i * NY + 1] = 0.0; // y
+            acadoVariables.y[i * NY + 2] = 0; // w
+            acadoVariables.y[i * NY + 3] = 1.0;
+            acadoVariables.y[i * NY + 4] = 0;
+        }
 
-            acadoVariables.yN[ 0 ] = 0; // x
-            acadoVariables.yN[ 1 ] = 1.0; // y
-            acadoVariables.yN[ 2 ] = 0; // w
-            acadoVariables.yN[ 3 ] = 0;
-            acadoVariables.yN[ 4 ] = 0;
-            acadoVariables.yN[ 5 ] = 0;
+        acadoVariables.yN[ 0 ] = 0.0; // x
+        acadoVariables.yN[ 1 ] = 0.0; // y
+        acadoVariables.yN[ 2 ] = 0; // w
 
-            //
-            // Current state feedback
-            //
-            for (i = 0; i < NX; ++i)
-                acadoVariables.x0[ i ] = acadoVariables.x[ i ];
+        //
+        // Current state feedback
+        //
+        for (i = 0; i < NX; ++i)
+            acadoVariables.x0[ i ] = acadoVariables.x[ i ];
 
-            acado_preparationStep();
+        acado_preparationStep();
+
+        int status;
+
+        status = acado_feedbackStep();
+
+        if (status)
+        {
+            std::cout<<"error!!!"<<std::endl;
+        }
+
+        geometry_msgs::msg::Twist twist;
+        twist.linear.x = acadoVariables.u[0];
+        twist.angular.z = acadoVariables.u[1];
+        cmd_vel->publish(twist);
+
     }
     /*std::vector<double> Solve()
     {
