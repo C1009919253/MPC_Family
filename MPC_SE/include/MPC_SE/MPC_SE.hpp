@@ -126,7 +126,7 @@ public:
             while (number >> out)
             {
                 double a = std::stod(out);
-                //data[i] = a;
+                data[i] = a;
                 i++;
             }
             vd.push_back(data);
@@ -140,7 +140,7 @@ public:
             while (number >> out)
             {
                 double a = std::stod(out);
-                //data[i] = a;
+                data[i] = a;
                 i++;
             }
             wd.push_back(data);
@@ -177,9 +177,6 @@ private:
 
     int times;
 
-
-
-
     void sub_odom_callback(nav_msgs::msg::Odometry odom1)
     {
         x0 = odom1.pose.pose.position.x;
@@ -196,6 +193,7 @@ private:
     }
     void timer_callback()
     {
+        times++;
         //
         // Prepare a consistent initial guess
         //
@@ -203,9 +201,11 @@ private:
 
         for (i = 0; i < N + 1; ++i)
         {
-            acadoVariables.x[i * NX + 0] = x0;
-            acadoVariables.x[i * NX + 1] = y0;
-            acadoVariables.x[i * NX + 2] = theta0;
+            acadoVariables.x[i * NX + 0] = cos(td[times][0])*x0 + sin(td[times][0])*y0 - cos(td[times][0])*xd[times][0] - sin(td[times][0])*yd[times][0];
+            acadoVariables.x[i * NX + 1] = -sin(td[times][0])*x0 + cos(td[times][0])*y0 + sin(td[times][0])*xd[times][0] - cos(td[times][0])*yd[times][0];
+            acadoVariables.x[i * NX + 2] = theta0-td[times][0];
+            acadoVariables.x[i * NX + 3] = vd[times+i][0];
+            acadoVariables.x[i * NX + 4] = wd[times+i][0];
         }
 
         //
@@ -216,14 +216,15 @@ private:
         {
             acadoVariables.y[i * NY + 0] = 0.0; // x
             acadoVariables.y[i * NY + 1] = 0.0; // y
-            acadoVariables.y[i * NY + 2] = 0; // w
-            acadoVariables.y[i * NY + 3] = 1.0;
-            acadoVariables.y[i * NY + 4] = 0;
+            acadoVariables.y[i * NY + 2] = 0.0;
+            acadoVariables.y[i * NY + 3] = 0.0;
+            acadoVariables.y[i * NY + 4] = 0.0;
+            acadoVariables.y[i * NY + 5] = 0.0;
         }
 
         acadoVariables.yN[ 0 ] = 0.0; // x
         acadoVariables.yN[ 1 ] = 0.0; // y
-        acadoVariables.yN[ 2 ] = 0; // w
+        acadoVariables.yN[ 2 ] = 0.0;
 
         //
         // Current state feedback
@@ -242,9 +243,15 @@ private:
             std::cout<<"error!!!"<<std::endl;
         }
 
+        for (i = 0; i < N + 1; ++i)
+        {
+            std::cout << acadoVariables.x[i * NX + 3] << std::endl << acadoVariables.x[i * NX + 4] << std::endl;
+        }
+
         geometry_msgs::msg::Twist twist;
         twist.linear.x = acadoVariables.u[0];
-        twist.angular.z = acadoVariables.u[1];
+        twist.linear.y = acadoVariables.u[1];
+        twist.angular.z = acadoVariables.u[2];
         cmd_vel->publish(twist);
 
     }

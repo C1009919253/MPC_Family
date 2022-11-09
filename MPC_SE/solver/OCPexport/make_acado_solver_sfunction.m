@@ -19,13 +19,13 @@
 %% Legacy code wrapper for the ACADO CGT generated OCP solver
 
 % Dimensions
-ACADO_N   = 30;
-ACADO_NX  = 3;
+ACADO_N   = 100;
+ACADO_NX  = 5;
 ACADO_NDX = 0;
 ACADO_NXA = 0;
-ACADO_NU  = 2;
+ACADO_NU  = 3;
 ACADO_NOD = 0;
-ACADO_NY  = 5;
+ACADO_NY  = 6;
 ACADO_NYN = 3;
 
 ACADO_QP_SOLVER                   = 'QPOASES';
