@@ -4,22 +4,16 @@ rosbag2_bagfile_information:
   relative_file_paths:
     - L_01_0.db3
   duration:
-    nanoseconds: 37999327142
+    nanoseconds: 37887972674
   starting_time:
-    nanoseconds_since_epoch: 1662000860446255993
-  message_count: 1520
+    nanoseconds_since_epoch: 1670072022228965620
+  message_count: 758
   topics_with_message_count:
     - topic_metadata:
         name: /Vehicle1/odom/unfiltered
         type: nav_msgs/msg/Odometry
         serialization_format: cdr
         offered_qos_profiles: "- history: 3\n  depth: 0\n  reliability: 1\n  durability: 2\n  deadline:\n    sec: 2147483647\n    nsec: 4294967295\n  lifespan:\n    sec: 2147483647\n    nsec: 4294967295\n  liveliness: 1\n  liveliness_lease_duration:\n    sec: 2147483647\n    nsec: 4294967295\n  avoid_ros_namespace_conventions: false"
-      message_count: 760
-    - topic_metadata:
-        name: /Vehicle2/odom/unfiltered
-        type: nav_msgs/msg/Odometry
-        serialization_format: cdr
-        offered_qos_profiles: "- history: 3\n  depth: 0\n  reliability: 1\n  durability: 2\n  deadline:\n    sec: 2147483647\n    nsec: 4294967295\n  lifespan:\n    sec: 2147483647\n    nsec: 4294967295\n  liveliness: 1\n  liveliness_lease_duration:\n    sec: 2147483647\n    nsec: 4294967295\n  avoid_ros_namespace_conventions: false"
-      message_count: 760
+      message_count: 758
   compression_format: ""
   compression_mode: ""

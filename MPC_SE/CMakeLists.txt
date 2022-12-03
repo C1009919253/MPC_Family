@@ -24,6 +24,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
 
 include_directories( include/)
 
@@ -65,6 +66,7 @@ ament_target_dependencies(MPC_SE
   tf2_geometry_msgs
   nav_msgs
   Eigen3
+  rosbag2_cpp
 )
 
 install(TARGETS MPC_SE

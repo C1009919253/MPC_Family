@@ -21,7 +21,8 @@
 #include "tf2_msgs/msg/tf_message.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
+#include "nav_msgs/msg/path.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include <vector>
 
 #include <omp.h> // multi-core
@@ -38,9 +39,10 @@
 #define NYN			ACADO_NYN
 #define NUM_STEPS   100			/* number of simulation steps */
 #define VERBOSE     1			/* show iterations: 1, silent: 0 */
+#define PI          3.1415926   /* PIIIIIIIIIIII*/
 
 //static size_t N = 6;
-static double dt = 0.1;
+static double dt = 0.01;
 
 static int node_number=2;
 
@@ -66,7 +68,9 @@ public:
         }
 
         this->cmd_vel = this->create_publisher<geometry_msgs::msg::Twist>(node_name+"/cmd_vel", 10);
-        this->timer = this->create_wall_timer(100ms, std::bind(&MPC_SE::timer_callback, this));
+        this->desire_path_pub = this->create_publisher<nav_msgs::msg::Path>("desire_path", 10);
+        this->true_path_pub = this->create_publisher<nav_msgs::msg::Path>("true_path", 10);
+        this->timer = this->create_wall_timer(10ms, std::bind(&MPC_SE::timer_callback, this));
 
         std::ifstream ifsx, ifsy, ifst, ifsv, ifsw;
         ifsx.open("x-t.txt");
@@ -149,10 +153,12 @@ public:
         for (int i = 0; i < xd.size(); i++)
         {
             geometry_msgs::msg::PoseStamped point;
-            point.pose.position.x = xd[i][0]-0.15;
-            point.pose.position.y = yd[i][0]-0.25;
-            //desire_path.poses.push_back(point);
+            point.pose.position.x = xd[i][0];
+            point.pose.position.y = yd[i][0];
+            desire_path.poses.push_back(point);
         }
+        desire_path.header.frame_id = "path";
+        true_path.header.frame_id = "path";
 
         times = 0;
 
@@ -161,12 +167,16 @@ public:
 
         acado_initializeSolver();
 
+        start = std::chrono::steady_clock::now();
+
     }
 private:
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_list[20];
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr desire_path_pub, true_path_pub;
     nav_msgs::msg::Odometry odom[20];
     rclcpp::TimerBase::SharedPtr timer;
+    nav_msgs::msg::Path desire_path, true_path;
 
     std::string node_name;
     char robot_num;
@@ -175,13 +185,20 @@ private:
 
     std::vector<double *> xd, yd, td, vd, wd;
 
-    int times;
+    double times;
+    std::chrono::steady_clock::time_point start, now;
 
     void sub_odom_callback(nav_msgs::msg::Odometry odom1)
     {
         x0 = odom1.pose.pose.position.x;
         y0 = odom1.pose.pose.position.y;
         theta0 = Orientation2Elur(odom1);
+        geometry_msgs::msg::PoseStamped point;
+        point.pose.position.x = x0;
+        point.pose.position.y = y0;//sqrt((x0 - (5+times/10.0)*cos(times/5.0))*(x0 - (5+times/10.0)*cos(times/5.0))+(y0 - (5+times/10.0)*sin(times/5.0))*(y0 - (5+times/10.0)*sin(times/5.0)))
+        true_path.poses.push_back(point);
+        //std::cout<<sqrt((x0)*(x0)+(y0)*(y0))-(5+times/10.0)<<std::endl;
+        //std::cout<<sqrt((x0 - (5)*cos(times/5.0))*(x0 - (5)*cos(times/5.0))+(y0 - (5)*sin(times/5.0))*(y0 - (5)*sin(times/5.0)))<<std::endl;
     }
     double Orientation2Elur(nav_msgs::msg::Odometry ori_odom)
     {
@@ -193,20 +210,44 @@ private:
     }
     void timer_callback()
     {
-        times++;
+        now = std::chrono::steady_clock::now();
+
+        desire_path_pub->publish(desire_path);
+        true_path_pub->publish(true_path);
+        times = std::chrono::duration_cast<std::chrono::milliseconds>(now-start).count()/1000.0;
+        times = times + 1.0*dt;
         //
         // Prepare a consistent initial guess
         //
         int i;
 
+        double thetad = 1*PI/2 + times*0.2;
+        /*while (thetad > PI)
+            thetad = thetad - 2*PI;*/
+        std::cout<<"times"<<times<<std::endl<<"thetad:"<<thetad<<std::endl<<"costd:"<<cos(times/5.0)<<std::endl<<"sintd:"<<sin(times/5.0)<<std::endl<<"r:"<<5+times/10.0<<std::endl;
         for (i = 0; i < N + 1; ++i)
         {
-            acadoVariables.x[i * NX + 0] = cos(td[times][0])*x0 + sin(td[times][0])*y0 - cos(td[times][0])*xd[times][0] - sin(td[times][0])*yd[times][0];
+            /*acadoVariables.x[i * NX + 0] = cos(td[times][0])*x0 + sin(td[times][0])*y0 - cos(td[times][0])*xd[times][0] - sin(td[times][0])*yd[times][0];
             acadoVariables.x[i * NX + 1] = -sin(td[times][0])*x0 + cos(td[times][0])*y0 + sin(td[times][0])*xd[times][0] - cos(td[times][0])*yd[times][0];
             acadoVariables.x[i * NX + 2] = theta0-td[times][0];
-            acadoVariables.x[i * NX + 3] = vd[times+i][0];
-            acadoVariables.x[i * NX + 4] = wd[times+i][0];
+            acadoVariables.od[i * NX + 0] = vd[times+i][0];
+            acadoVariables.od[i * NX + 1] = wd[times+i][0];*/
+            acadoVariables.x[i * NX + 0] = cos(PI/2 + times*0.2)*x0 + sin(PI/2 + times*0.2)*y0 - cos(PI/2 + times*0.2)*(5+times/10.0)*cos(times/5.0) - sin(PI/2 + times*0.2)*(5+times/10.0)*sin(times/5.0);
+            acadoVariables.x[i * NX + 1] = -sin(PI/2 + times*0.2)*x0 + cos(PI/2 + times*0.2)*y0 + sin(PI/2 + times*0.2)*(5+times/10.0)*cos(times/5.0) - cos(PI/2 + times*0.2)*(5+times/10.0)*sin(times/5.0);
+            acadoVariables.x[i * NX + 2] = cos(theta0 - thetad);
+            acadoVariables.x[i * NX + 3] = sin(theta0 - thetad);
+            acadoVariables.od[i * NX + 0] = 1.0+(times+i*dt)/50.0;
+            acadoVariables.od[i * NX + 1] = 0.2;
+            //acadoVariables.od[i * NX + 2] = 0;
+            //acadoVariables.od[i * NX + 2] = 5.0+(times+i*dt)/10.0;
+            /*acadoVariables.x[i * NX + 0] = x0 - (5+times/10.0)*cos(times/5.0);
+            acadoVariables.x[i * NX + 1] = y0 - (5+times/10.0)*sin(times/5.0);
+            acadoVariables.x[i * NX + 2] = cos(theta0);
+            acadoVariables.x[i * NX + 3] = sin(theta0);
+            acadoVariables.od[i * NX + 0] = 0;
+            acadoVariables.od[i * NX + 1] = 0;*/
         }
+        times = times-1.0*dt;
 
         //
         // Prepare references
@@ -243,11 +284,6 @@ private:
             std::cout<<"error!!!"<<std::endl;
         }
 
-        for (i = 0; i < N + 1; ++i)
-        {
-            std::cout << acadoVariables.x[i * NX + 3] << std::endl << acadoVariables.x[i * NX + 4] << std::endl;
-        }
-
         geometry_msgs::msg::Twist twist;
         twist.linear.x = acadoVariables.u[0];
         twist.linear.y = acadoVariables.u[1];
@@ -255,10 +291,6 @@ private:
         cmd_vel->publish(twist);
 
     }
-    /*std::vector<double> Solve()
-    {
-
-    }*/
 };
 
 #if 0
